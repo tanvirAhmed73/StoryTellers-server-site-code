@@ -1,20 +1,21 @@
 const express = require('express');
 const cors = require('cors');
-const jwt = require("jsonwebtoken");//npm i jsonwebtoken
+// const jwt = require("jsonwebtoken");//npm i jsonwebtoken
 const app = express();
-const cookieParser = require('cookie-parser')
+// const cookieParser = require('cookie-parser')
 const port = process.env.port || 5000;
 require('dotenv').config()
 
 // middleware
-app.use(cors(
-  {
-    origin:['http://localhost:5173'],
-    credentials:true
-  }
-));
+// const corsOptions = {
+//   origin: 'https://project-eleven-f9486.web.app',
+//   // other options if needed
+// };
+
+// app.use(cors(corsOptions));
+app.use(cors());
 app.use(express.json());
-app.use(cookieParser());
+// app.use(cookieParser());
 
 
 
@@ -34,25 +35,25 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // client.connect();
 
-    // jwt middleware
-    const verify = async(req,res,next) =>{
-      // cookies ache kina check koro
-      const token = req.cookies?.token;
-      if(!token){
-        res.status(401).sent({status : "unAuthorized Access", code:"401"})
-      }
-      jwt.verify(token, process.env.Secret_key,(error,decode)=>{
-        if(error){
-          res.status(401).sent({status : "unAuthorized Access", code:"401"})
-        }else{
-          // console.log(decode);
-          req.decode = decode;
-        }
-      });
-      next();
-    }
+    // // jwt middleware
+    // const verify = async(req,res,next) =>{
+    //   // cookies ache kina check koro
+    //   const token = req.cookies?.token;
+    //   if(!token){
+    //     res.status(401).sent({status : "unAuthorized Access", code:"401"})
+    //   }
+    //   jwt.verify(token, process.env.Secret_key,(error,decode)=>{
+    //     if(error){
+    //       res.status(401).sent({status : "unAuthorized Access", code:"401"})
+    //     }else{
+    //       // console.log(decode);
+    //       req.decode = decode;
+    //     }
+    //   });
+    //   next();
+    // }
 
     // database
     const database = client.db("bookDB");
@@ -125,19 +126,19 @@ async function run() {
       res.send(result)
     })
 
-    app.post("/jwt", async(req,res)=>{
-      const body = req.body;
-      // jwt.sign("payload","secretKey","expireInfo");
-      const token = jwt.sign(body,process.env.Secret_key, {expiresIn : "10h" });
-      const expirationDate = new Date();
-      expirationDate.setDate(expirationDate.getDate() + 7)
-      res.cookie ("token",token,{
-        httpOnly:true,
-        secure: false,
-        expires:expirationDate,
-      }).send({msg:"Succeed"})
-      // res.send({body,token});
-    })
+    // app.post("/jwt", async(req,res)=>{
+    //   const body = req.body;
+    //   // jwt.sign("payload","secretKey","expireInfo");
+    //   const token = jwt.sign(body,process.env.Secret_key, {expiresIn : "10h" });
+    //   const expirationDate = new Date();
+    //   expirationDate.setDate(expirationDate.getDate() + 7)
+    //   res.cookie ("token",token,{
+    //     httpOnly:true,
+    //     secure: false,
+    //     expires:expirationDate,
+    //   }).send({msg:"Succeed"})
+    //   // res.send({body,token});
+    // })
 
 
     // add product
@@ -151,14 +152,6 @@ async function run() {
         console.log(error);
         res.send(error); 
       }
-
-      app.delete('/addborrow/:id', async(req,res) =>{
-        const id = req.params.id;
-        const query = {_id: new ObjectId(id)}
-        const result = await productCollection.deleteOne(query);
-        res.send(result);
-      })
-
       
   })
     // Send a ping to confirm a successful connection
