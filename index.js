@@ -3,14 +3,10 @@ const cors = require('cors');
 // const jwt = require("jsonwebtoken");//npm i jsonwebtoken
 const app = express();
 // const cookieParser = require('cookie-parser')
-const port = process.env.port || 5000;
+const port = process.env.PORT || 5000;
 require('dotenv').config()
 
-// middleware
-// const corsOptions = {
-//   origin: 'https://project-eleven-f9486.web.app',
-//   // other options if needed
-// };
+
 
 // app.use(cors(corsOptions));
 app.use(cors());
@@ -37,38 +33,14 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     // client.connect();
 
-    // // jwt middleware
-    // const verify = async(req,res,next) =>{
-    //   // cookies ache kina check koro
-    //   const token = req.cookies?.token;
-    //   if(!token){
-    //     res.status(401).sent({status : "unAuthorized Access", code:"401"})
-    //   }
-    //   jwt.verify(token, process.env.Secret_key,(error,decode)=>{
-    //     if(error){
-    //       res.status(401).sent({status : "unAuthorized Access", code:"401"})
-    //     }else{
-    //       // console.log(decode);
-    //       req.decode = decode;
-    //     }
-    //   });
-    //   next();
-    // }
+    
 
     // database
     const database = client.db("bookDB");
     const productCollection=database.collection("book");
     const borrowCollection=database.collection("borrowBook");
     
-    // Add error handling
-    try {
-      // Attempt to create the "catagorie" collection
-      await borrowCollection.insertOne({}); // This will not actually insert data, but it will create the collection
-       // This will not actually insert data, but it will create the collection
-      console.log("Collection 'catagorie' created successfully.");
-    } catch (error) {
-      console.error("Error creating 'catagorie' collection:", error);
-    }
+    
     // add product of get
     app.get('/book', async(req,res)=>{
       const cursor = productCollection.find();
@@ -84,11 +56,19 @@ async function run() {
     })
 
     app.get('/addborrow',  async(req,res)=>{
-      const cursor = borrowCollection.find();
-      const result = await cursor.toArray();
+      const email = req.query.email;
+      
+      console.log('Received request for email:', email);
+
+      const query = {email: email};
+      const result = await borrowCollection.find(query).toArray();
+      console.log('Result from MongoDB:', result);
+
       res.send(result);
     })
 
+
+    
 
     // add to borrow section
     app.post('/addborrow',  async(req,res)=>{
@@ -103,6 +83,24 @@ async function run() {
       }
       
   })
+
+
+ //quantity of the book update after borrow the book
+ app.patch('/book/:id', async(req,res)=>{
+  const item =req.body 
+  console.log(item)
+  const id = req.params.id;
+  const filter = { '_id': new ObjectId(id) };
+  const updatedDoc ={
+    $set:{
+      quantityOfTheBook: item.quantity
+    }
+  }
+  const result = await productCollection.updateOne(filter,updatedDoc);
+  res.send(result);
+}) 
+
+
 
 
     // updated product
@@ -126,19 +124,14 @@ async function run() {
       res.send(result)
     })
 
-    // app.post("/jwt", async(req,res)=>{
-    //   const body = req.body;
-    //   // jwt.sign("payload","secretKey","expireInfo");
-    //   const token = jwt.sign(body,process.env.Secret_key, {expiresIn : "10h" });
-    //   const expirationDate = new Date();
-    //   expirationDate.setDate(expirationDate.getDate() + 7)
-    //   res.cookie ("token",token,{
-    //     httpOnly:true,
-    //     secure: false,
-    //     expires:expirationDate,
-    //   }).send({msg:"Succeed"})
-    //   // res.send({body,token});
-    // })
+    app.delete('/addborrow/:id', async(req,res) =>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const result = await borrowCollection.deleteOne(query);
+      res.send(result);
+    })
+
+  
 
 
     // add product
@@ -155,7 +148,7 @@ async function run() {
       
   })
     // Send a ping to confirm a successful connection
-    client.db("admin").command({ ping: 1 });
+    // client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
