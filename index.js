@@ -15,6 +15,7 @@ app.use(express.json());
 
 
 
+
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.q1fcrjh.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -39,11 +40,17 @@ async function run() {
     const database = client.db("bookDB");
     const productCollection=database.collection("book");
     const borrowCollection=database.collection("borrowBook");
+    const audioBooksCollection=database.collection("audioBooks");
     
     
     // add product of get
     app.get('/book', async(req,res)=>{
       const cursor = productCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    })
+    app.get('/audioBooks', async(req,res)=>{
+      const cursor = audioBooksCollection.find();
       const result = await cursor.toArray();
       res.send(result);
     })
