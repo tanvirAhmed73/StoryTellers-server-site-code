@@ -41,6 +41,7 @@ async function run() {
     const productCollection=database.collection("book");
     const borrowCollection=database.collection("borrowBook");
     const audioBooksCollection=database.collection("audioBooks");
+    const cartCollection=database.collection("cartBooks");
     
     
     // add product of get
@@ -49,6 +50,7 @@ async function run() {
       const result = await cursor.toArray();
       res.send(result);
     })
+    
     app.get('/audioBooks', async(req,res)=>{
       const cursor = audioBooksCollection.find();
       const result = await cursor.toArray();
@@ -64,9 +66,6 @@ async function run() {
 
     app.get('/addborrow',  async(req,res)=>{
       const email = req.query.email;
-      
-      console.log('Received request for email:', email);
-
       const query = {email: email};
       const result = await borrowCollection.find(query).toArray();
       console.log('Result from MongoDB:', result);
@@ -74,7 +73,27 @@ async function run() {
       res.send(result);
     })
 
+    app.get('/addToCart',  async(req,res)=>{
+      const email = req.query.email;
+      console.log('Received request for email:', email);
+      const query = {email: email};
+      const result = await cartCollection.find(query).toArray();
+      res.send(result);
+    })
 
+
+    app.post('/addToCart',  async(req,res)=>{
+      try{
+        const addCartData = req.body;
+        const result = await cartCollection.insertOne(addCartData);
+        res.send(result);
+      }
+      catch(error){
+        console.log(error);
+        res.send(error); 
+      }
+      
+  })
     
 
     // add to borrow section
@@ -135,6 +154,12 @@ async function run() {
       const id = req.params.id;
       const query = {_id: new ObjectId(id)}
       const result = await borrowCollection.deleteOne(query);
+      res.send(result);
+    })
+    app.delete('/addToCart/:id', async(req,res) =>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const result = await cartCollection.deleteOne(query);
       res.send(result);
     })
 
